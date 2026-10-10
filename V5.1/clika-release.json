@@ -1,0 +1,14 @@
+{
+  "application": "하늘마루",
+  "application_version": "5.1",
+  "model": "Qwen/Qwen3.5-2B",
+  "model_revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+  "runtime": "ClikaRT 0.6.4",
+  "execution": "local SDK, Vulkan RTX 2080 Ti",
+  "platform_model_url": "https://platform.clika.io/models/b9cefa92-39bc-4859-834f-61da34e299d2",
+  "platform_benchmark_url": "https://platform.clika.io/benchmark-groups/0ecd8b14-af06-4b80-a873-786e5e187cb6",
+  "benchmark_name": "Haneulmaru V5.1 Qwen3.5-2B RTX2080Ti",
+  "benchmark_status": "completed",
+  "benchmark_completed_at": "2026-10-11T01:58:16+09:00",
+  "notes": "V5.1 reuses the registered model weights. The application is a separate local project, not a model uploaded to CLIKA. A new version-named benchmark completed; prior V5 records are preserved. This does not start an application server or a platform serving deployment."
+}

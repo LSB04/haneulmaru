@@ -1,0 +1,32 @@
+최신 2026-10-11 결과는 업데이트_2026-10-11.txt 및 benchmarks/ 참조.
+아래 내용은 교체 전 2026-10-10 기록입니다.
+
+하늘마루 V5 검증 (2026-10-10)
+
+Python 테스트 15개 통과: USB/BLE/휴대폰 센서 우선순위, 오래된 데이터 폐기, HTTP 인증, 모델 JSON 범위 검증, AWS credential 엔드포인트 제거 확인.
+JavaScript 테스트 20개 통과: 합성 장면/시점 입력/세션/전송 설정/장면 설정 검증.
+Android PacketParser: 분할 수신, 합쳐진 줄, CRLF, 과대 패킷 폐기 및 복귀 통과.
+Android APK: Python 빌드 스크립트로 Java/DEX/APK 생성, v2/v3 서명 검증 통과.
+패키지 io.haneulmaru.v5usb, 버전 5.0, Android 8.0(API26) 이상, target API35.
+
+실제 CLIKA 모델 실행:
+Qwen2.5-0.5B-Instruct → ClikaRT 0.6.4 → Vulkan FP16 → RTX 2080 Ti.
+드론 30대, 2D → count=30, top=true. 약 498ms.
+품질 high, 속도 2, 태양 높이 40 → quality=high, speed=2, sun=40. 약 202ms.
+일반 성능 설명 응답 생성 확인. 0.5B 모델이라 한국어 출력 및 복잡한 설명 정확성에는 제한이 있습니다.
+첫 로딩 약 10~12초. 위 응답 시간은 로딩 이후 모델 처리 시간입니다.
+
+브라우저 종단 간 검사:
+PC에서 자연어 요청 → 제안 확인 → 적용 → 30개 및 2D 전환 확인.
+휴대폰용 HTTPS 웹 화면에서 자연어 요청 → count=12, paused=true → 적용 → PC와 수신 화면 모두 12개/정지 상태 확인.
+라이선스는 PC 파일만 사용. 페이지·APK·Git에 라이선스 원문 없음.
+
+그래픽:
+전용 RTX Chrome 프로필의 WebGL 장치가 NVIDIA GeForce RTX 2080 Ti로 확인되었습니다.
+높은 품질, 2560×1468, 기본 합성 객체 24개에서 약 60 FPS의 짧은 관측입니다.
+일반 개인 Chrome에서는 Microsoft Basic Render Driver가 확인되어 실행기가 전용 프로필을 사용합니다.
+실측은 장시간/폰 수신 속도 또는 기존 대비 향상 배수를 보장하지 않습니다.
+
+미실시:
+실제 휴대폰 APK 설치, 실제 NU40 C-to-C 센서부터 영상까지의 종단 간 확인.
+장시간 안정성·모바일 통신 지연 측정·여러 명 동시 연결.

@@ -1,0 +1,199 @@
+{
+  "key": "baseline",
+  "gpu": "NVIDIA GeForce RTX 2080 Ti",
+  "dtype": "float16",
+  "backend": "Vulkan",
+  "loadMs": 9096,
+  "cases": [
+    {
+      "prompt": "드론 30대로 설정해줘",
+      "expected": {
+        "count": 30
+      },
+      "actual": {
+        "count": 1,
+        "quality": "high",
+        "speed": 2,
+        "sun": 70,
+        "top": false,
+        "paused": false
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 799,
+      "raw": "```json\n{\n  \"count\": 1,\n  \"quality\": \"high\",\n  \"speed\": 2,\n  \"sun\": 70,\n  \"top\": false,\n  \"paused\": false\n}\n```"
+    },
+    {
+      "prompt": "드론 100대, 품질은 높음으로 바꿔",
+      "expected": {
+        "count": 100,
+        "quality": "high"
+      },
+      "actual": {
+        "count": 100,
+        "quality": "high",
+        "speed": 2,
+        "sun": 80,
+        "top": true,
+        "paused": false
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 303,
+      "raw": "```json\n{\n  \"count\": 100,\n  \"quality\": \"high\",\n  \"speed\": 2,\n  \"sun\": 80,\n  \"top\": true,\n  \"paused\": false\n}\n```"
+    },
+    {
+      "prompt": "2D 지도로 바꾸고 일시정지해",
+      "expected": {
+        "top": true,
+        "paused": true
+      },
+      "actual": {
+        "count": 1,
+        "quality": "high",
+        "speed": 0.25,
+        "sun": 80,
+        "top": false,
+        "paused": true
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 318,
+      "raw": "```json\n{\n  \"count\": 1,\n  \"quality\": \"high\",\n  \"speed\": 0.25,\n  \"sun\": 80,\n  \"top\": false,\n  \"paused\": true\n}\n```"
+    },
+    {
+      "prompt": "3D로 돌아가고 재생해",
+      "expected": {
+        "top": false,
+        "paused": false
+      },
+      "actual": {
+        "count": 1,
+        "quality": "high",
+        "speed": 2,
+        "sun": 80,
+        "top": true,
+        "paused": false
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 294,
+      "raw": "```json\n{\n  \"count\": 1,\n  \"quality\": \"high\",\n  \"speed\": 2,\n  \"sun\": 80,\n  \"top\": true,\n  \"paused\": false\n}\n```"
+    },
+    {
+      "prompt": "속도는 2배, 태양 고도는 45도로",
+      "expected": {
+        "speed": 2,
+        "sun": 45
+      },
+      "actual": {
+        "count": 1,
+        "quality": "high",
+        "speed": 2,
+        "sun": 45,
+        "top": true,
+        "paused": false
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 304,
+      "raw": "```json\n{\n  \"count\": 1,\n  \"quality\": \"high\",\n  \"speed\": 2,\n  \"sun\": 45,\n  \"top\": true,\n  \"paused\": false\n}\n```"
+    },
+    {
+      "prompt": "최저 품질로 하고 드론은 12대만",
+      "expected": {
+        "quality": "low",
+        "count": 12
+      },
+      "actual": {
+        "count": 12,
+        "quality": "low",
+        "speed": 0.25,
+        "sun": 10,
+        "top": true,
+        "paused": false
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 293,
+      "raw": "{\n  \"count\": 12,\n  \"quality\": \"low\",\n  \"speed\": 0.25,\n  \"sun\": 10,\n  \"top\": true,\n  \"paused\": false\n}"
+    },
+    {
+      "prompt": "최고 품질, 0.25배속으로 천천히",
+      "expected": {
+        "quality": "ultra",
+        "speed": 0.25
+      },
+      "actual": null,
+      "valid": false,
+      "exact": false,
+      "ms": 272,
+      "raw": "{\n  \"count\": 1,\n  \"quality\": \"high\",\n  \"speed\": \"0.25\",\n  \"sun\": null,\n  \"top\": true,\n  \"paused\": false\n}"
+    },
+    {
+      "prompt": "드론 수는 바꾸지 말고 일시정지만 해",
+      "expected": {
+        "paused": true
+      },
+      "actual": {},
+      "valid": true,
+      "exact": false,
+      "ms": 42,
+      "raw": "{}"
+    },
+    {
+      "prompt": "품질은 균형으로, 속도는 보통 1배로",
+      "expected": {
+        "quality": "balanced",
+        "speed": 1
+      },
+      "actual": {
+        "count": 1,
+        "quality": "balanced",
+        "speed": 1,
+        "sun": 80,
+        "top": false,
+        "paused": false
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 301,
+      "raw": "```json\n{\n  \"count\": 1,\n  \"quality\": \"balanced\",\n  \"speed\": 1,\n  \"sun\": 80,\n  \"top\": false,\n  \"paused\": false\n}\n```"
+    },
+    {
+      "prompt": "안녕하세요",
+      "expected": {},
+      "actual": null,
+      "valid": false,
+      "exact": false,
+      "ms": 99,
+      "raw": "안녕하세요! 어떻게 도와드릴까요?"
+    },
+    {
+      "prompt": "파일을 삭제해줘",
+      "expected": {},
+      "actual": null,
+      "valid": false,
+      "exact": false,
+      "ms": 214,
+      "raw": "죄송합니다, 현재 사용 가능한 기능은 파일 삭제를 제공하지 않습니다. 다른 도움이 필요하시면 언제든지 물어보세요!"
+    },
+    {
+      "prompt": "태양 고도를 60도로 하고 3D로 바꿔줘",
+      "expected": {
+        "sun": 60,
+        "top": false
+      },
+      "actual": null,
+      "valid": false,
+      "exact": false,
+      "ms": 309,
+      "raw": "```json\n{\n  \"count\": 1,\n  \"quality\": \"high\",\n  \"speed\": 1,\n  \"sun\": 1,\n  \"top\": true,\n  \"paused\": false\n}\n```"
+    }
+  ],
+  "exact": 0,
+  "medianMs": 297.5,
+  "totalGpuMemoryMiB": "1598",
+  "max_seq": 2048,
+  "prompt": "korean-v2"
+}

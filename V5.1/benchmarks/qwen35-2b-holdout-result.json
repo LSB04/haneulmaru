@@ -1,0 +1,126 @@
+{
+  "key": "qwen35-2b",
+  "gpu": "NVIDIA GeForce RTX 2080 Ti",
+  "dtype": "float16",
+  "backend": "Vulkan",
+  "loadMs": 8586,
+  "cases": [
+    {
+      "prompt": "비행체 수를 64로 변경",
+      "expected": {
+        "count": 64
+      },
+      "actual": {
+        "count": 64
+      },
+      "valid": true,
+      "exact": true,
+      "ms": 587,
+      "raw": "{\"count\":64}"
+    },
+    {
+      "prompt": "현재 품질은 유지하고 태양만 35도로 설정",
+      "expected": {
+        "sun": 35
+      },
+      "actual": {
+        "quality": "balanced",
+        "sun": 35
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 411,
+      "raw": "{\"quality\":\"balanced\",\"sun\":35}"
+    },
+    {
+      "prompt": "드론 8대에 낮은 품질로 실행하고 2배속",
+      "expected": {
+        "count": 8,
+        "quality": "low",
+        "speed": 2
+      },
+      "actual": {
+        "count": 8,
+        "quality": "low",
+        "speed": 2
+      },
+      "valid": true,
+      "exact": true,
+      "ms": 479,
+      "raw": "{\"count\":8,\"quality\":\"low\",\"speed\":2}"
+    },
+    {
+      "prompt": "멈춘 상태에서 3D 보기로 바꿔",
+      "expected": {
+        "paused": true,
+        "top": false
+      },
+      "actual": {
+        "paused": false,
+        "top": true
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 395,
+      "raw": "{\"paused\":false,\"top\":true}"
+    },
+    {
+      "prompt": "균형 품질과 위에서 보기로 전환",
+      "expected": {
+        "quality": "balanced",
+        "top": true
+      },
+      "actual": {
+        "quality": "balanced",
+        "top": true
+      },
+      "valid": true,
+      "exact": true,
+      "ms": 392,
+      "raw": "{\"quality\":\"balanced\",\"top\":true}"
+    },
+    {
+      "prompt": "일시정지를 풀고 정상 속도로 돌아가",
+      "expected": {
+        "paused": false,
+        "speed": 1
+      },
+      "actual": {
+        "paused": false
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 352,
+      "raw": "{\"paused\":false}"
+    },
+    {
+      "prompt": "200대를 최고 품질로 보고 싶어",
+      "expected": {
+        "count": 200,
+        "quality": "ultra"
+      },
+      "actual": {
+        "count": 200,
+        "quality": "ultra"
+      },
+      "valid": true,
+      "exact": true,
+      "ms": 436,
+      "raw": "{\"count\":200,\"quality\":\"ultra\"}"
+    },
+    {
+      "prompt": "오늘 날씨 어때?",
+      "expected": {},
+      "actual": {},
+      "valid": true,
+      "exact": true,
+      "ms": 301,
+      "raw": "{}"
+    }
+  ],
+  "exact": 5,
+  "medianMs": 403.0,
+  "totalGpuMemoryMiB": "5449",
+  "max_seq": 2048,
+  "prompt": "korean-v2"
+}

@@ -1,0 +1,24 @@
+{
+  "source": "https://platform.clika.io/benchmark-groups/0ecd8b14-af06-4b80-a873-786e5e187cb6",
+  "observation": "Visible platform result; values rounded as displayed",
+  "name": "Haneulmaru V5.1 Qwen3.5-2B RTX2080Ti",
+  "status": "completed",
+  "started_at": "2026-10-11T01:54:16+09:00",
+  "completed_at": "2026-10-11T01:58:16+09:00",
+  "model": "Qwen/Qwen3.5-2B",
+  "device": "NVIDIA GeForce RTX 2080 Ti",
+  "runtime_backend": "ClikaRT Vulkan:0",
+  "peak_memory_mb": 5258,
+  "cells": [
+    {"input_tokens":128,"output_tokens":128,"streams":1,"decode_tokens_per_second":46.3,"ttft_ms":106},
+    {"input_tokens":128,"output_tokens":128,"streams":4,"decode_tokens_per_second":157,"ttft_ms":348},
+    {"input_tokens":128,"output_tokens":128,"streams":8,"decode_tokens_per_second":267,"ttft_ms":643},
+    {"input_tokens":2048,"output_tokens":128,"streams":1,"decode_tokens_per_second":29.5,"ttft_ms":1691},
+    {"input_tokens":2048,"output_tokens":128,"streams":4,"decode_tokens_per_second":54.8,"ttft_ms":6650},
+    {"input_tokens":2048,"output_tokens":128,"streams":8,"decode_tokens_per_second":48.1,"ttft_ms":17259},
+    {"input_tokens":128,"output_tokens":1024,"streams":1,"decode_tokens_per_second":48.4,"ttft_ms":119},
+    {"input_tokens":128,"output_tokens":1024,"streams":4,"decode_tokens_per_second":177,"ttft_ms":357},
+    {"input_tokens":128,"output_tokens":1024,"streams":8,"decode_tokens_per_second":310,"ttft_ms":711}
+  ],
+  "limitations": "LLM benchmark only; not rendering FPS or phone latency. Multi-stream throughput is aggregate. Not an offline network-blocked application test."
+}

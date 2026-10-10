@@ -1,0 +1,27 @@
+{
+  "model": "Qwen/Qwen3.5-2B",
+  "device": "NVIDIA GeForce RTX 2080 Ti",
+  "runtime_backend": "Vulkan",
+  "url": "https://platform.clika.io/benchmark-groups/78f43cc4-9bee-42e8-b8f4-281c41174037",
+  "status": "completed",
+  "started_local": "2026-10-11T01:20:11+09:00",
+  "finished_local": "2026-10-11T01:26:06+09:00",
+  "source": "Values transcribed from the completed CLIKA platform results table; table values are rounded.",
+  "peak_memory_mb": 6178,
+  "rows": [
+    {"input_tokens":128,"output_tokens":128,"streams":1,"decode_tokens_per_second":45.4,"itl_p50_ms":21.1,"ttft_ms":125,"prefill_tokens_per_second":1024},
+    {"input_tokens":128,"output_tokens":128,"streams":4,"decode_tokens_per_second":162,"itl_p50_ms":22.0,"ttft_ms":425,"prefill_tokens_per_second":301},
+    {"input_tokens":128,"output_tokens":128,"streams":8,"decode_tokens_per_second":233,"itl_p50_ms":27.1,"ttft_ms":768,"prefill_tokens_per_second":167},
+    {"input_tokens":2048,"output_tokens":128,"streams":1,"decode_tokens_per_second":25.7,"itl_p50_ms":20.3,"ttft_ms":2308,"prefill_tokens_per_second":887},
+    {"input_tokens":2048,"output_tokens":128,"streams":4,"decode_tokens_per_second":48.1,"itl_p50_ms":27.2,"ttft_ms":7515,"prefill_tokens_per_second":273},
+    {"input_tokens":2048,"output_tokens":128,"streams":8,"decode_tokens_per_second":51.3,"itl_p50_ms":35.9,"ttft_ms":15210,"prefill_tokens_per_second":135},
+    {"input_tokens":128,"output_tokens":1024,"streams":1,"decode_tokens_per_second":48.0,"itl_p50_ms":20.2,"ttft_ms":132,"prefill_tokens_per_second":967},
+    {"input_tokens":128,"output_tokens":1024,"streams":4,"decode_tokens_per_second":188,"itl_p50_ms":23.0,"ttft_ms":427,"prefill_tokens_per_second":301},
+    {"input_tokens":128,"output_tokens":1024,"streams":8,"decode_tokens_per_second":258,"itl_p50_ms":32.0,"ttft_ms":776,"prefill_tokens_per_second":248}
+  ],
+  "notes": [
+    "Platform LLM throughput is not rendering FPS or Korean instruction accuracy.",
+    "Multi-stream throughput is aggregate; it must not be reported as single-request speed.",
+    "The V5 SDK path runs on demand; no duplicate persistent model deployment was started."
+  ]
+}
