@@ -1,0 +1,47 @@
+하늘마루 PRO · RTX / AWS (2026-10-10)
+
+실행
+- 프로젝트 루트의 하늘마루_RTX_AWS_실행.cmd 또는 기존 하늘마루_PC서버_실행.cmd.
+- 별도 Chrome 프로필(output/gpu_browser_profile) + --force-high-performance-gpu로 실행합니다.
+- 일반 Chrome의 설정, 기존 탭, Windows 그래픽 레지스트리는 변경하지 않았습니다.
+- 이미 8792 서버가 실행 중이면 두 번째 서버는 실행되지 않습니다.
+- PC 렌더러 창을 화면에 유지하고 새 QR로 폰을 연결하세요. 서버 재시작 시 접속 코드가 바뀝니다.
+
+GPU 검증
+- 실제 WebGL 장치명에 NVIDIA GeForce RTX 2080 Ti가 표시되는지 확인하세요.
+- CUDA 설치와 WebGL GPU 선택은 별개입니다. 이 앱 렌더링은 Three.js/WebGL입니다.
+- 같은 해상도 1920x748, balanced, 비행체 122개에서 기존 소프트웨어 렌더링 10초 평균 15.7 FPS.
+- 별도 프로필 Intel에서 약 59 FPS 관측 후, 고성능 GPU 옵션으로 RTX 2080 Ti 선택 확인.
+- RTX에서 약 58 FPS, NVIDIA VRAM 156 MiB 사용 관측. 이 수치는 PC 브라우저 프레임이며 폰 수신 FPS 아님.
+- 전후 관측은 완전히 통제된 벤치마크가 아닙니다. 카메라 시점·가림 상태·스트리밍 연결 차이가 있습니다.
+- 정적 나무/건물 그림자는 장면·태양 변경 때만 갱신합니다. AR 공간 배치 중에는 갱신합니다.
+- 일시정지 중 비행체 행렬 재계산을 생략합니다.
+- 선명 전송 모드 상한: 1920px / 30 FPS / 18 Mbps. 실제 성능은 WebRTC 통계로 확인하세요.
+
+AWS 설정
+1. 대회 계정으로 Bedrock(us-east-1) → API 키 → 단기 API 키 생성.
+2. 실제 송출 PC 창(주소 127.0.0.1:8792/host)의 AWS · 자연어 장면 설정을 엽니다.
+3. 키를 비밀번호 입력칸에 붙이고 키 연결. 채팅·코드·공개 GitHub에 넣지 않습니다.
+4. '비행체 80개, 해질녘, 높은 품질, 2D 지도' → 설정 제안 받기 → 제안 적용.
+5. 10초 성능 측정 후 성능 측정 설명을 누르면 측정 수치의 설명을 받습니다.
+
+모델은 us.anthropic.claude-sonnet-4-6로 고정했습니다. 대회 지정 Sonnet 4.6 사용.
+AWS 호출은 버튼을 누를 때만 수행하며 출력 최대 900토큰입니다. EC2 인스턴스는 생성하지 않습니다.
+입력 문장/선택한 성능 지표만 보내며 카메라 영상은 보내지 않습니다.
+키는 서버 메모리에만 저장하고 상태 응답에 포함하지 않습니다. 서버 재시작/키 지우기 때 삭제됩니다.
+키 입력됨과 실제 호출 성공은 다릅니다. 만료·권한 문제는 AWS 오류 코드로 안내합니다.
+phone 권한, 외부 터널, 다른 출처에서는 AWS 설정/호출 API를 거절합니다.
+
+검증
+- Python 모의/HTTP 통합 테스트 9개 통과 (실제 AWS 비용 없음).
+- 기존 전송/지형 Node 테스트 5개 통과.
+- 실제 Sonnet 4.6 장면 제안 호출 성공: 입력 209 / 출력 81토큰.
+- 제안 적용으로 80개, sun=15, high, top=true 확인.
+- 검증용 8794 서버와 실제 송출 8792 서버의 키 메모리는 별개입니다.
+- 실제 휴대폰 수신 FPS 및 장시간 eGPU 안정성은 아직 재측정하지 않았습니다.
+
+공식 참고
+https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-use.html
+https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-generate.html
+https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-sonnet-4-6.html
+https://chromium.googlesource.com/chromium/src.git/+/refs/heads/main/gpu/config/gpu_switches.cc

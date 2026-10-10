@@ -10,3 +10,9 @@ __pycache__/
 *.key
 tools/cloudflared/cloudflared.exe
 *.download
+output/
+.venv-*/
+*.zip
+# Dataset photos stay in the local handoff, not this public repository.
+datasets/**/images/
+experiments/photo_color_dataset/__pycache__/

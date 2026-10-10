@@ -20,6 +20,9 @@ PC에서 합성 3D 지형과 비행체를 렌더링하고 휴대폰으로 WebRTC
 - [구조와 검증 범위](02_구조와검증.txt)
 - [IMU 참고 파일](IMU_참고)
 - [PC 송신·휴대폰 수신 소스](experiments/haneulmaru_pro)
+- [정지사진 drone / 색상표식 데이터셋 제작·테스트](experiments/photo_color_dataset/README.md)
+- [데이터 라벨·manifest·검증 보고서](datasets/photo_color_v1_metadata)
+- [RTX / AWS 사용법](experiments/haneulmaru_pro/AWS_RTX_사용법.txt)
 
 **NUCODE 직접 연동은 아직 미구현입니다.** 기존 프로젝트의 참고 펌웨어·패킷 파서·합성 예제와 연결 지점을 함께 제공합니다. 참고 펌웨어는 현재 보드에 자동 업로드되지 않습니다.
 
@@ -36,7 +39,16 @@ Three.js/WebGL → canvas.captureStream → WebRTC 비디오 → 휴대폰.
 - 1920·2560픽셀 전송을 PC 두 탭 사이에서 확인했습니다. 실제 휴대폰의 최신 화질 개선 효과는 추가 측정이 필요합니다.
 - `Microsoft Basic Render Driver`가 표시되면 RTX 렌더링이 아닙니다.
 - 배경/최소화된 탭에서는 FPS가 제한될 수 있습니다.
-- AWS/Bedrock은 아직 연결되지 않았습니다.
+- 별도 Chrome 프로필과 고성능 GPU 옵션을 사용합니다. 장치명에서 실제 GPU를 확인하세요. CUDA 설치 여부와 WebGL GPU 선택은 별개입니다.
+- `http://127.0.0.1:8792/host`에서 AWS Bedrock 단기 키를 입력할 수 있습니다. 키는 서버 메모리에만 보관되며 재시작하면 다시 입력합니다. 기본 모델은 `us.anthropic.claude-sonnet-4-6`, 리전은 `us-east-1`입니다.
+- AWS는 버튼을 누를 때 장면 설정 제안/성능 설명을 요청합니다. 사진이나 카메라 영상을 AWS에 전송하지 않습니다.
+- 첫 영상 프레임 대기, PC 탭 숨김, 영상 프레임 중단 상태를 구분해서 표시합니다. PC 렌더러를 화면에 유지하세요.
+
+## 정지사진 데이터셋
+
+원본 사진 300장과 red/blue/green 표식 변형 900장, 총 1,200장의 실험용 데이터셋을 만들었습니다. 객체 클래스는 `drone` 하나입니다. train/val/test는 840/240/120장이고 같은 원본의 네 변형은 한 split에만 들어갑니다. 표식은 사진 위에 합성한 2D 태그이며 실물 표식 촬영이나 학습 모델이 아닙니다.
+
+공개 저장소에는 제작기·라벨·manifest·검증 보고서를 포함합니다. 공개 원본 일부에 상용 사진 워터마크가 보여 사진 자체는 재배포하지 않았습니다. [원본 COCO ZIP](https://universe.roboflow.com/ai-bmkoo/drone-detection-inlmy/dataset/1/download/coco)을 내려받은 뒤 `데이터셋_재생성.cmd`에 ZIP 경로를 입력하면 재생성됩니다. 팀원이 별도로 받은 `photo_color_v1_팀원전달.zip`은 압축을 풀고 `미리보기.html`만 열면 됩니다.
 
 ## 포함 구성요소
 

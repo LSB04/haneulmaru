@@ -23,4 +23,4 @@ if (-not (Test-Path -LiteralPath $tunnelExe)) {
     Move-Item -LiteralPath $tunnelDownload -Destination $tunnelExe
 }
 if ((Get-FileHash -LiteralPath $tunnelExe -Algorithm SHA256).Hash -ne $tunnelHash) { throw 'Cloudflared checksum mismatch; executable was not started.' }
-& $taskPython -X utf8 (Join-Path $PSScriptRoot 'experiments/haneulmaru_pro/stream_server.py')
+& $taskPython -X utf8 (Join-Path $PSScriptRoot 'experiments/haneulmaru_pro/stream_server.py') --gpu-browser
