@@ -8,3 +8,5 @@ __pycache__/
 .aws/
 *.pem
 *.key
+tools/cloudflared/cloudflared.exe
+*.download
