@@ -1,0 +1,8 @@
+Qwen/Qwen2.5-0.5B-Instruct
+Source: https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct
+Revision: 7ae557604adf67be50417f59c2c2f167def9a775
+License: Apache-2.0 (downloaded with the model by download_model.py)
+Model weights are not redistributed in this repository.
+Official ClikaRT loader reference: https://docs.clika.io/clikart/api-py/modelverse-auto/
+CLIKA SDK and runtime license are not redistributed; obtain them from your authorized CLIKA project.
+The local benchmark values in this release are observations on one PC, not vendor performance claims.
