@@ -2,3 +2,5 @@
 [hidden]{display:none!important}
 @media(max-width:700px){header{padding:12px}h1{font-size:20px}header small{font-size:8px}aside{left:10px;right:10px;top:auto;bottom:90px;width:auto;max-height:34vh;padding:12px}h2,.muted{display:none}label{margin-top:10px}.modes{margin-top:6px}#map{width:75px;height:75px}footer{left:10px;right:10px;bottom:8px}footer div{padding:6px 10px}.badge{display:none}#fps{font-size:17px}}
 @media(max-height:550px) and (orientation:landscape){header{padding:8px 14px}header small{display:none}h1{font-size:18px}aside{top:60px;bottom:65px;left:12px;width:255px;max-height:none;padding:10px}h2,.muted{display:none}footer{bottom:8px}#map{width:90px;height:90px}.badge{display:none}}
+
+.imu-panel{padding:12px;border:1px solid #78debe;border-radius:12px;margin-bottom:12px}.imu-direction{font-size:32px;font-weight:700;color:#78debe;margin:8px 0}.imu-panel p{line-height:1.5}

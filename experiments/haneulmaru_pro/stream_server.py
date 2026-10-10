@@ -1,9 +1,13 @@
-"""PC rendered WebRTC mode, separate from 8790 and 8791. Signaling only."""
+"""PC rendered WebRTC mode, separate from 8790 and 8791. Signaling plus authenticated NU40 input."""
 import server
 from http.server import ThreadingHTTPServer
 from urllib.parse import urlsplit,parse_qs
 import secrets,json,threading,subprocess,sys,re,webbrowser,base64,time
 from collections import deque
+import argparse,shutil
+from nu40_imu import ImuHub
+IMU=None
+MODEL=server.ROOT.parents[1]/"+imu data"/"nu40-imu-direction-training(1).json"
 HOST=secrets.token_urlsafe(24);PHONE=secrets.token_urlsafe(24);URL='';LOCK=threading.Lock();MESSAGES=deque(maxlen=256);SEQ=0
 ASSETS=dict(server.ASSETS)
 ASSETS.update({'/'+n:server.ROOT/n for n in ['rtc.js','host-stream.js','receiver.js','receiver.html']})
@@ -19,8 +23,17 @@ class Handler(server.Handler):
   if path.startswith('/stream/'):
    role=self.role()
    if not role:return self.send_json(401,{'error':'unauthorized'})
+   if path in ('/stream/imu','/stream/imu-model'):
+    if role!='host':return self.send_json(403,{'error':'host only'})
+    if path=='/stream/imu':
+     if IMU is None:return self.send_json(503,{'error':'IMU disabled'})
+     return self.send_json(200,IMU.snapshot())
+    try:
+     model=json.loads(MODEL.read_text(encoding='utf-8'))
+     return self.send_json(200,{k:model[k] for k in ('format','schema_version','units','directions','rate_threshold_dps','similarity_threshold')})
+    except (OSError,ValueError,KeyError):return self.send_json(503,{'error':'direction model unavailable'})
    if path=='/stream/info' and role=='host':
-    url=(URL or 'http://127.0.0.1:8792')+'/phone#'+PHONE
+    url=(URL or f'http://127.0.0.1:{self.server.server_port}')+'/phone#'+PHONE
     from reportlab.graphics.barcode import qr
     from reportlab.graphics.shapes import Drawing
     from reportlab.graphics import renderSVG
@@ -51,24 +64,44 @@ class Handler(server.Handler):
   with LOCK:SEQ+=1;MESSAGES.append((SEQ,role,message,time.monotonic()))
   return self.send_json(200,{'ok':True})
 def main():
- global URL
- try:http=ThreadingHTTPServer(('127.0.0.1',8792),Handler)
- except OSError:print('Port 8792 occupied. Existing stream server may be running.',flush=True);return 1
- threading.Thread(target=http.serve_forever,daemon=True).start();host='http://127.0.0.1:8792/host#'+HOST
+ global URL,IMU
+ parser=argparse.ArgumentParser(description='Haneulmaru with NU40 USB/BLE IMU')
+ parser.add_argument('--local',action='store_true',help='Run without a public tunnel')
+ parser.add_argument('--no-browser',action='store_true')
+ parser.add_argument('--port',type=int,default=8792)
+ parser.add_argument('--imu-port',help='NU40 USB port; auto-detects by USB VID/PID by default')
+ parser.add_argument('--ble-address',help='Optional BLE address for selecting one NU40')
+ parser.add_argument('--no-imu',action='store_true')
+ parser.add_argument('--no-ble',action='store_true')
+ args=parser.parse_args()
+ try:http=ThreadingHTTPServer(('127.0.0.1',args.port),Handler)
+ except OSError:print(f'Port {args.port} occupied. Existing stream server may be running.',flush=True);return 1
+ child=None
+ if not args.no_imu:
+  IMU=ImuHub(port=args.imu_port,ble_address=args.ble_address,ble=not args.no_ble)
+  IMU.start()
+ threading.Thread(target=http.serve_forever,daemon=True).start()
+ host=f'http://127.0.0.1:{args.port}/host#'+HOST
  print('PC: '+host,flush=True)
- if '--no-browser' not in sys.argv:webbrowser.open(host)
- exe=server.ROOT.parents[1]/'tools/cloudflared/cloudflared.exe'
- child=subprocess.Popen([str(exe),'tunnel','--no-autoupdate','--url','http://127.0.0.1:8792','--protocol','http2'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,encoding='utf-8',errors='replace',creationflags=subprocess.CREATE_NO_WINDOW if sys.platform=='win32' else 0)
+ if not args.no_browser:webbrowser.open(host)
+ exe=server.ROOT.parents[1]/'tools/cloudflared/cloudflared.exe' if sys.platform=='win32' else shutil.which('cloudflared')
  try:
-  for line in child.stdout:
-   m=re.search(r'https://[a-z0-9-]+\.trycloudflare\.com',line)
-   if m and not URL:URL=m.group(0);print('PHONE: '+URL+'/phone#'+PHONE,flush=True)
-   if 'ERR' in line:print(line.strip(),flush=True)
+  if args.local or not exe or not server.Path(exe).is_file():
+   print('Local mode: NU40 USB preferred; BLE remains connected.',flush=True)
+   threading.Event().wait()
+  else:
+   child=subprocess.Popen([str(exe),'tunnel','--no-autoupdate','--url',f'http://127.0.0.1:{args.port}','--protocol','http2'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,encoding='utf-8',errors='replace',creationflags=subprocess.CREATE_NO_WINDOW if sys.platform=='win32' else 0)
+   for line in child.stdout:
+    m=re.search(r'https://[a-z0-9-]+\.trycloudflare\.com',line)
+    if m and not URL:URL=m.group(0);print('PHONE: '+URL+'/phone#'+PHONE,flush=True)
+    if 'ERR' in line:print(line.strip(),flush=True)
  except KeyboardInterrupt:pass
  finally:
-  child.terminate()
-  try:child.wait(timeout=5)
-  except subprocess.TimeoutExpired:child.kill();child.wait()
+  if child:
+   child.terminate()
+   try:child.wait(timeout=5)
+   except subprocess.TimeoutExpired:child.kill();child.wait()
+  if IMU:IMU.stop()
   http.shutdown();http.server_close()
  return 0
 if __name__=='__main__':sys.exit(main())
