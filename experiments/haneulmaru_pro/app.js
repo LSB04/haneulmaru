@@ -15,7 +15,7 @@ const ortho=new T.OrthographicCamera(-700,700,700,-700,.1,4000);ortho.position.s
 let active=camera,controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,40,0);controls.enableDamping=true;controls.minDistance=12;controls.maxDistance=1900;controls.maxPolarAngle=Math.PI*.49;controls.update();
 scene.add(new T.HemisphereLight(0xd8efff,0x6a7259,2.1));const sun=new T.DirectionalLight(0xffe1ac,3);sun.position.set(-380,620,240);sun.castShadow=true;sun.shadow.camera.left=sun.shadow.camera.bottom=-650;sun.shadow.camera.right=sun.shadow.camera.top=650;sun.shadow.camera.near=1;sun.shadow.camera.far=1800;sun.shadow.bias=-.0003;sun.shadow.normalBias=1.2;scene.add(sun);
 let world,quality,mode='virtual',paused=false,clock=0,last=0,stream=null,xrSession=null,hitSource=null,xrSpace=null,placed=false,top=false,sensor=false,sensorOrigin=null,raw=null;
-let measurements=[],benchmark=null,benchSamples=[],frameSamples=[],lastStat=0,installPrompt=null,remoteAspect=null,remoteAR=false,remoteSeq=-1,streamEdge=1920;
+let measurements=[],benchmark=null,benchSamples=[],frameSamples=[],lastStat=0,installPrompt=null,remoteAspect=null,remoteAR=false,remoteSeq=-1,streamEdge=1920,imuEnabled=false;
 function resize(){if(renderer.xr.isPresenting)return;const p=profiles[quality||'balanced'];if(remoteAspect){const long=streamEdge;renderer.setPixelRatio(1);renderer.setSize(remoteAspect>1?long:Math.round(long*remoteAspect),remoteAspect>1?Math.round(long/remoteAspect):long,false);camera.aspect=remoteAspect;}else{renderer.setPixelRatio(Math.min(devicePixelRatio,p.dpr));renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;}camera.updateProjectionMatrix();ortho.left=-700*camera.aspect;ortho.right=700*camera.aspect;ortho.updateProjectionMatrix();}
 function setQuality(value){if(xrSession){say('공간 AR을 종료한 뒤 품질을 변경하세요.');$('quality').value=quality;return;}quality=value;const old=world;world=buildWorld(value);scene.add(world.root);if(old){scene.remove(old.root);old.dispose();}renderer.shadowMap.enabled=profiles[value].shadow>0;renderer.shadowMap.needsUpdate=true;sun.shadow.mapSize.setScalar(profiles[value].shadow||512);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null;}resize();$('quality').value=value;say(`${value} 품질 · ${((profiles[value].segments+1)**2).toLocaleString()} 지형 정점. 실제 FPS를 확인하세요.`);}
 setQuality(software?'low':mobile?'balanced':'high');
@@ -27,6 +27,7 @@ $('virtual').onclick=virtual;
 $('ar').onclick=async()=>{try{if(xrSession)await xrSession.end();if(!isSecureContext)throw Error('카메라 AR은 HTTPS 접속이 필요합니다.');stopCamera();stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}});$('camera').srcObject=stream;await $('camera').play();mode='ar';normalBackground();say('카메라 위 합성 화면입니다. 실제 공간 고정은 공간 AR을 사용하세요.');}catch(e){stopCamera();mode='virtual';normalBackground();say('카메라 시작 실패: '+e.message);}};
 const reticle=new T.Mesh(new T.RingGeometry(.08,.105,40).rotateX(-Math.PI/2),new T.MeshBasicMaterial({color:0x72ffd0}));reticle.matrixAutoUpdate=false;reticle.visible=false;scene.add(reticle);
 $('xr').onclick=async()=>{try{
+ if(imuEnabled)throw Error('IMU 중지 후 공간 AR을 시작하세요.');
  if(xrSession){await xrSession.end();return;}
  if(!navigator.xr||!await navigator.xr.isSessionSupported('immersive-ar'))throw Error('이 브라우저/기기는 공간 AR을 지원하지 않습니다. 카메라 AR을 사용하세요.');
  stopCamera();sensor=false;sensorOrigin=null;top=false;active=camera;controls.enabled=false;renderer.xr.enabled=true;renderer.xr.setReferenceSpaceType('local');
@@ -38,19 +39,19 @@ $('xr').onclick=async()=>{try{
  }catch(e){if(xrSession)await xrSession.end();renderer.xr.enabled=false;controls.enabled=true;say(e.message);}};
 $('ui').addEventListener('beforexrselect',e=>{if(e.target.closest('button,input,select,aside'))e.preventDefault();});
 $('arScale').oninput=()=>{if(xrSession)world.root.scale.setScalar(+$('arScale').value/1200);};
-function resetView(){sensorOrigin=null;sensor=false;$('sensor').textContent='폰 회전 시점';if(xrSession){placed=false;world.root.visible=false;return;}top=false;active=camera;controls.enabled=true;camera.position.set(620,450,660);controls.target.set(0,40,0);controls.update();$('top').textContent='2D 지도';}
+function resetView(){sensorOrigin=null;sensor=false;$('sensor').textContent='폰 회전 시점';if(xrSession){placed=false;world.root.visible=false;return;}top=false;active=camera;controls.enabled=!imuEnabled;camera.position.set(620,450,660);controls.target.set(0,40,0);controls.update();$('top').textContent='2D 지도';}
 $('reset').onclick=resetView;
-$('top').onclick=()=>{if(xrSession)return;top=!top;active=top?ortho:camera;controls.enabled=!top&&!sensor;$('top').textContent=top?'3D 지형':'2D 지도';};
+$('top').onclick=()=>{if(xrSession)return;top=!top;active=top?ortho:camera;controls.enabled=!top&&!sensor&&!imuEnabled;$('top').textContent=top?'3D 지형':'2D 지도';};
 $('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?'재생':'일시정지';};
 $('count').oninput=()=>$('countText').textContent=$('count').value;
 $('quality').onchange=()=>setQuality($('quality').value);
 $('sun').oninput=()=>{const deg=+$('sun').value,a=deg*Math.PI/180;sun.position.set(-Math.cos(a)*700,Math.sin(a)*800,240);sun.color.setHSL(.09,.65-(deg/160),.85);sun.intensity=1.5+deg/35;renderer.shadowMap.needsUpdate=true;$('sunText').textContent=deg<25?'해질녘':deg<45?'오후':'낮';};
 const deviceQ=new T.Quaternion(),euler=new T.Euler(),fix=new T.Quaternion().setFromAxisAngle(new T.Vector3(1,0,0),-Math.PI/2),screenQ=new T.Quaternion();let sensorBase=new T.Quaternion();
 addEventListener('deviceorientation',e=>{if(![e.alpha,e.beta,e.gamma].every(Number.isFinite))return;euler.set(e.beta*Math.PI/180,e.alpha*Math.PI/180,-e.gamma*Math.PI/180,'YXZ');deviceQ.setFromEuler(euler).multiply(fix).multiply(screenQ.setFromAxisAngle(new T.Vector3(0,0,1),-(screen.orientation?.angle||0)*Math.PI/180));raw=deviceQ.clone();});
-$('sensor').onclick=async()=>{try{if(sensor){sensor=false;controls.enabled=!top;controls.target.copy(camera.position).add(new T.Vector3(0,0,-1).applyQuaternion(camera.quaternion).multiplyScalar(300));$('sensor').textContent='폰 회전 시점';return;}if(typeof DeviceOrientationEvent==='undefined')throw Error('회전 센서 API가 없습니다.');if(DeviceOrientationEvent.requestPermission&&await DeviceOrientationEvent.requestPermission()!=='granted')throw Error('동작 센서 권한이 필요합니다.');sensor=true;top=false;active=camera;controls.enabled=false;sensorOrigin=null;sensorBase.copy(camera.quaternion);$('sensor').textContent='터치 시점';say('회전 센서 대기 · 기기를 움직이세요. 센서 미지원 시 터치 시점으로 전환하세요.');}catch(e){say(e.message);}};
+$('sensor').onclick=async()=>{try{if(imuEnabled)throw Error('IMU 중지 후 폰 회전 시점을 사용하세요.');if(sensor){sensor=false;controls.enabled=!top;controls.target.copy(camera.position).add(new T.Vector3(0,0,-1).applyQuaternion(camera.quaternion).multiplyScalar(300));$('sensor').textContent='폰 회전 시점';return;}if(typeof DeviceOrientationEvent==='undefined')throw Error('회전 센서 API가 없습니다.');if(DeviceOrientationEvent.requestPermission&&await DeviceOrientationEvent.requestPermission()!=='granted')throw Error('동작 센서 권한이 필요합니다.');sensor=true;top=false;active=camera;controls.enabled=false;sensorOrigin=null;sensorBase.copy(camera.quaternion);$('sensor').textContent='터치 시점';say('회전 센서 대기 · 기기를 움직이세요. 센서 미지원 시 터치 시점으로 전환하세요.');}catch(e){say(e.message);}};
 $('hide').onclick=async()=>{document.body.classList.add('immersed');try{await document.documentElement.requestFullscreen();}catch{}};$('show').onclick=()=>{document.body.classList.remove('immersed');if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});};
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;});$('install').onclick=async()=>{if(installPrompt){await installPrompt.prompt();installPrompt=null;}else say('Android Chrome 메뉴 → 앱 설치 또는 홈 화면에 추가. HTTPS 접속이 필요합니다.');};
-if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').then(()=>navigator.serviceWorker.ready).then(async()=>{const cache=await caches.open('haneulmaru-pro-1');const entries=await cache.keys();$('offline').textContent=`오프라인 캐시: ${entries.length}개 파일 준비. 첫 접속 후 브라우저 캐시 유지 필요.`;}).catch(e=>{$('offline').textContent='오프라인 캐시 등록 실패: '+e.message;});
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').then(()=>navigator.serviceWorker.ready).then(async()=>{const cache=await caches.open('haneulmaru-pro-2');const entries=await cache.keys();$('offline').textContent=`오프라인 캐시: ${entries.length}개 파일 준비. 첫 접속 후 브라우저 캐시 유지 필요.`;}).catch(e=>{$('offline').textContent='오프라인 캐시 등록 실패: '+e.message;});
 $('bench').onclick=()=>{benchSamples=[];benchmark=performance.now();say('10초간 FPS 측정 중 — 화면을 유지하세요.');};
 function report(samples){const sorted=[...samples].sort((a,b)=>a-b),avg=samples.reduce((a,b)=>a+b,0)/samples.length;return {at:new Date().toISOString(),gpu,software,quality,count:+$('count').value,mode,width:renderer.domElement.width,height:renderer.domElement.height,frames:samples.length,meanFps:1000/avg,p95FrameMs:sorted[Math.floor(sorted.length*.95)],phoneDimensionsCm:[16.5,7.5,1],note:'Browser frame interval; not network latency or physical-phone validation.'};}
 $('export').onclick=()=>{if(!measurements.length){say('먼저 10초 성능 측정을 실행하세요.');return;}const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(measurements,null,2)],{type:'application/json'}));a.href=url;a.download='haneulmaru-pro-benchmark.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
@@ -78,21 +79,24 @@ export const streamBridge={canvas:renderer.domElement,metrics:()=>({...latestMet
  if([.25,1,2].includes(s.speed))$('speed').value=String(s.speed);
  if(Number.isFinite(s.sun)&&s.sun>=10&&s.sun<=80){$('sun').value=s.sun;$('sun').oninput();}
  if(typeof s.paused==='boolean'){paused=s.paused;$('pause').textContent=paused?'재생':'일시정지';}
- if(typeof s.top==='boolean'){top=s.top;active=top?ortho:camera;controls.enabled=!top;$('top').textContent=top?'3D 지형':'2D 지도';}
- },setStreamEdge(edge){if([960,1280,1920,2560].includes(edge)){streamEdge=edge;if(remoteAspect)resize();}},state:()=>({gpu,count:+$('count').value,paused,top,quality}),control(d){
+ if(typeof s.top==='boolean'){top=s.top;active=top?ortho:camera;controls.enabled=!top&&!imuEnabled&&!sensor;$('top').textContent=top?'3D 지형':'2D 지도';}
+ },setStreamEdge(edge){if([960,1280,1920,2560].includes(edge)){streamEdge=edge;if(remoteAspect)resize();}},
+ setImuEnabled(value){if(value&&xrSession)return false;imuEnabled=!!value;if(imuEnabled){sensor=false;sensorOrigin=null;top=false;active=camera;$('top').textContent='2D 지도';$('sensor').textContent='폰 회전 시점';}else{controls.target.copy(camera.position).add(new T.Vector3(0,0,-1).applyQuaternion(camera.quaternion).multiplyScalar(300));}controls.enabled=!imuEnabled&&!top;return true;},
+ resetView,imuRotate(yaw,pitch){if(!imuEnabled||top||xrSession||![yaw,pitch].every(Number.isFinite))return;const e=new T.Euler().setFromQuaternion(camera.quaternion,'YXZ');e.y+=yaw;e.x=T.MathUtils.clamp(e.x+pitch,-Math.PI*.47,Math.PI*.47);e.z=0;camera.quaternion.setFromEuler(e);},
+ state:()=>({imuEnabled,gpu,count:+$('count').value,paused,top,quality}),control(d){
  if(!Number.isSafeInteger(d.seq)||d.seq<=remoteSeq)return;remoteSeq=d.seq;
  const finite=(v,lo,hi)=>Number.isFinite(v)&&v>=lo&&v<=hi;
  if(finite(d.aspect,.2,5)){remoteAspect=d.aspect;resize();}
  if(typeof d.ar==='boolean'){remoteAR=d.ar;scene.background=new T.Color(remoteAR?0x00ff00:0x9bbfcf);scene.fog=remoteAR?null:new T.FogExp2(0xa5c6d0,.00048);}
  if(Number.isInteger(d.count)&&d.count>=1&&d.count<=200){$('count').value=d.count;$('countText').textContent=d.count;}
  if(typeof d.paused==='boolean'){paused=d.paused;$('pause').textContent=paused?'재생':'일시정지';}
- if(typeof d.top==='boolean'){top=d.top;active=top?ortho:camera;controls.enabled=!top;$('top').textContent=top?'3D 지형':'2D 지도';}
+ if(typeof d.top==='boolean'){top=d.top;active=top?ortho:camera;controls.enabled=!top&&!imuEnabled;$('top').textContent=top?'3D 지형':'2D 지도';}
  if(d.reset){resetView();}
- if(finite(d.dx,-2,2)&&finite(d.dy,-2,2)){controls.enabled=false;const sph=new T.Spherical().setFromVector3(camera.position.clone().sub(controls.target));sph.theta-=d.dx*Math.PI*2;sph.phi=T.MathUtils.clamp(sph.phi+d.dy*Math.PI,.05,Math.PI*.49);camera.position.copy(controls.target).add(new T.Vector3().setFromSpherical(sph));camera.lookAt(controls.target);}
- if(finite(d.zoom,.2,5)){camera.position.sub(controls.target).multiplyScalar(d.zoom).clampLength(12,1900).add(controls.target);camera.lookAt(controls.target);}
- if(Array.isArray(d.q)&&d.q.length===4&&d.q.every(x=>finite(x,-1,1))){controls.enabled=false;const b=new T.Quaternion().setFromRotationMatrix(new T.Matrix4().lookAt(camera.position,controls.target,camera.up));camera.quaternion.copy(b).multiply(new T.Quaternion().fromArray(d.q).normalize());}
+ if(!imuEnabled&&finite(d.dx,-2,2)&&finite(d.dy,-2,2)){controls.enabled=false;const sph=new T.Spherical().setFromVector3(camera.position.clone().sub(controls.target));sph.theta-=d.dx*Math.PI*2;sph.phi=T.MathUtils.clamp(sph.phi+d.dy*Math.PI,.05,Math.PI*.49);camera.position.copy(controls.target).add(new T.Vector3().setFromSpherical(sph));camera.lookAt(controls.target);}
+ if(!imuEnabled&&finite(d.zoom,.2,5)){camera.position.sub(controls.target).multiplyScalar(d.zoom).clampLength(12,1900).add(controls.target);camera.lookAt(controls.target);}
+ if(!imuEnabled&&Array.isArray(d.q)&&d.q.length===4&&d.q.every(x=>finite(x,-1,1))){controls.enabled=false;const b=new T.Quaternion().setFromRotationMatrix(new T.Matrix4().lookAt(camera.position,controls.target,camera.up));camera.quaternion.copy(b).multiply(new T.Quaternion().fromArray(d.q).normalize());}
  },resetSession(){remoteSeq=-1;}};
-if(location.pathname==='/host'){renderer.domElement.style.objectFit='contain';import('./host-stream.js').catch(e=>say('스트리밍 시작 실패: '+e.message));}
+if(location.pathname==='/host'){renderer.domElement.style.objectFit='contain';import('./imu-input.js').catch(e=>say('IMU 시작 실패: '+e.message));import('./host-stream.js').catch(e=>say('스트리밍 시작 실패: '+e.message));}
 if(location.pathname==='/host'&&new URLSearchParams(location.search).get('benchmark')==='compare'){
  streamBridge.applyScene({count:122,quality:'balanced',sun:30});remoteAspect=1920/748;resize();
  setTimeout(()=>$('bench').click(),2500);

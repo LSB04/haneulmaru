@@ -1,10 +1,14 @@
-"""PC rendered WebRTC mode, separate from 8790 and 8791. Signaling only."""
+"""PC rendered WebRTC mode, separate from 8790 and 8791. Signaling plus authenticated NU40 input."""
 import server
 import bedrock_bridge
 from http.server import ThreadingHTTPServer
 from urllib.parse import urlsplit,parse_qs
 import secrets,json,threading,subprocess,sys,re,webbrowser,base64,time,argparse,os
 from collections import deque
+import shutil
+from nu40_imu import ImuHub
+IMU=None
+MODEL=server.ROOT.parents[1]/"+imu data"/"nu40-imu-direction-training(1).json"
 HOST=secrets.token_urlsafe(24);PHONE=secrets.token_urlsafe(24);URL='';LOCK=threading.Lock();MESSAGES=deque(maxlen=256);SEQ=0
 PORT=8792;TELEMETRY={}
 ASSETS=dict(server.ASSETS)
@@ -35,6 +39,15 @@ class Handler(server.Handler):
     if path.endswith('status'):return self.send_json(200,bedrock_bridge.status())
     with LOCK:value=dict(TELEMETRY)
     return self.send_json(200,value)
+   if path in ('/stream/imu','/stream/imu-model'):
+    if role!='host' or not self.local_host():return self.send_json(403,{'error':'PC 로컬 렌더러에서만 사용 가능합니다.'})
+    if path=='/stream/imu':
+     if IMU is None:return self.send_json(503,{'error':'IMU 입력이 비활성화되어 있습니다. (--no-imu)'})
+     return self.send_json(200,IMU.snapshot())
+    try:
+     model=json.loads(MODEL.read_text(encoding='utf-8-sig'))
+     return self.send_json(200,{key:model[key] for key in ('format','schema_version','units','directions','rate_threshold_dps','similarity_threshold')})
+    except (OSError,ValueError,KeyError,TypeError):return self.send_json(503,{'error':'IMU 방향 모델 파일을 확인하세요.'})
    if path=='/stream/info' and role=='host':
     url=(URL or 'http://127.0.0.1:'+str(PORT))+'/phone#'+PHONE
     from reportlab.graphics.barcode import qr
@@ -83,35 +96,52 @@ class Handler(server.Handler):
   with LOCK:SEQ+=1;MESSAGES.append((SEQ,role,message,time.monotonic()))
   return self.send_json(200,{'ok':True})
 def main():
- global URL,PORT
- parser=argparse.ArgumentParser();parser.add_argument('--port',type=int,default=8792);parser.add_argument('--no-browser',action='store_true');parser.add_argument('--local',action='store_true');parser.add_argument('--gpu-browser',action='store_true');parser.add_argument('--benchmark',action='store_true');args=parser.parse_args();PORT=args.port
+ global URL,PORT,IMU
+ parser=argparse.ArgumentParser()
+ parser.add_argument('--port',type=int,default=8792)
+ parser.add_argument('--no-browser',action='store_true')
+ parser.add_argument('--local',action='store_true')
+ parser.add_argument('--gpu-browser',action='store_true')
+ parser.add_argument('--benchmark',action='store_true')
+ parser.add_argument('--imu-port')
+ parser.add_argument('--ble-address')
+ parser.add_argument('--no-imu',action='store_true')
+ parser.add_argument('--no-ble',action='store_true')
+ args=parser.parse_args();PORT=args.port
  try:http=ThreadingHTTPServer(('127.0.0.1',PORT),Handler)
  except OSError:print('Port '+str(PORT)+' occupied. Existing stream server may be running.',flush=True);return 1
- threading.Thread(target=http.serve_forever,daemon=True).start();host='http://127.0.0.1:'+str(PORT)+'/host'+('?benchmark=compare' if args.benchmark else '')+'#'+HOST
- print('PC: '+host,flush=True)
- if not args.no_browser:
-  chrome=next((p for p in [os.path.join(os.environ.get('PROGRAMFILES',''),'Google/Chrome/Application/chrome.exe'),os.path.join(os.environ.get('LOCALAPPDATA',''),'Google/Chrome/Application/chrome.exe')] if os.path.isfile(p)),None)
-  if args.gpu_browser and chrome:
-   profile=server.ROOT.parents[1]/'output/gpu_browser_profile'
-   subprocess.Popen([chrome,'--user-data-dir='+str(profile),'--force-high-performance-gpu','--no-first-run','--no-default-browser-check','--new-window',host])
-  else:webbrowser.open(host)
- if args.local:
-  try:threading.Event().wait()
-  except KeyboardInterrupt:pass
-  finally:http.shutdown();http.server_close()
-  return 0
- exe=server.ROOT.parents[1]/'tools/cloudflared/cloudflared.exe'
- child=subprocess.Popen([str(exe),'tunnel','--no-autoupdate','--url','http://127.0.0.1:'+str(PORT),'--protocol','http2'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,encoding='utf-8',errors='replace',creationflags=subprocess.CREATE_NO_WINDOW if sys.platform=='win32' else 0)
+ threading.Thread(target=http.serve_forever,daemon=True).start()
+ child=None
  try:
-  for line in child.stdout:
-   m=re.search(r'https://[a-z0-9-]+\.trycloudflare\.com',line)
-   if m and not URL:URL=m.group(0);print('PHONE: '+URL+'/phone#'+PHONE,flush=True)
-   if 'ERR' in line:print(line.strip(),flush=True)
+  if not args.no_imu:
+   IMU=ImuHub(port=args.imu_port,ble_address=args.ble_address,ble=not args.no_ble)
+   IMU.start()
+  host='http://127.0.0.1:'+str(PORT)+'/host'+('?benchmark=compare' if args.benchmark else '')+'#'+HOST
+  print('PC: '+host,flush=True)
+  if not args.no_browser:
+   chrome=next((p for p in [os.path.join(os.environ.get('PROGRAMFILES',''),'Google/Chrome/Application/chrome.exe'),os.path.join(os.environ.get('LOCALAPPDATA',''),'Google/Chrome/Application/chrome.exe')] if os.path.isfile(p)),None)
+   if args.gpu_browser and chrome:
+    profile=server.ROOT.parents[1]/'output/gpu_browser_profile'
+    subprocess.Popen([chrome,'--user-data-dir='+str(profile),'--force-high-performance-gpu','--no-first-run','--no-default-browser-check','--new-window',host])
+   else:webbrowser.open(host)
+  bundled=server.ROOT.parents[1]/'tools/cloudflared/cloudflared.exe'
+  exe=str(bundled) if bundled.is_file() else shutil.which('cloudflared')
+  if args.local or not exe or not server.Path(exe).is_file():
+   print('Local mode: no public HTTPS tunnel. Keep this server running.',flush=True)
+   threading.Event().wait()
+  else:
+   child=subprocess.Popen([str(exe),'tunnel','--no-autoupdate','--url',f'http://127.0.0.1:{args.port}','--protocol','http2'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,encoding='utf-8',errors='replace',creationflags=subprocess.CREATE_NO_WINDOW if sys.platform=='win32' else 0)
+   for line in child.stdout:
+    m=re.search(r'https://[a-z0-9-]+\.trycloudflare\.com',line)
+    if m and not URL:URL=m.group(0);print('PHONE: '+URL+'/phone#'+PHONE,flush=True)
+    if 'ERR' in line:print(line.strip(),flush=True)
  except KeyboardInterrupt:pass
  finally:
-  child.terminate()
-  try:child.wait(timeout=5)
-  except subprocess.TimeoutExpired:child.kill();child.wait()
+  if child:
+   child.terminate()
+   try:child.wait(timeout=5)
+   except subprocess.TimeoutExpired:child.kill();child.wait()
+  if IMU:IMU.stop()
   http.shutdown();http.server_close()
  return 0
 if __name__=='__main__':sys.exit(main())

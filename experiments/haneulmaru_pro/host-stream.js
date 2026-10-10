@@ -1,7 +1,7 @@
 import {streamBridge as bridge} from './app.js';
 import {installAI} from './ai-panel.js';
 import {signaling,peer,sendData,streamProfiles,configureSender,streamDelta} from './rtc.js';
-const box=document.createElement('section');box.style.cssText='padding:12px;border:1px solid #78debe;margin-bottom:12px';document.getElementById('panel').prepend(box);
+const box=document.createElement('section');box.style.cssText='padding:12px;border:1px solid #78debe;margin-bottom:12px';const imuPanel=document.querySelector('.imu-panel');if(imuPanel)imuPanel.after(box);else document.getElementById('panel').prepend(box);
 box.innerHTML='<b>PC 서버 렌더러 · 전송 v2</b><p id="streamStatus">휴대폰 연결 대기</p><label>전송 화질 <select id="streamQuality"></select></label><p id="streamConfig"></p><p id="streamStats"></p><img id="streamQr" style="width:140px;background:white"><p><a id="streamLink" target="_blank" rel="noopener">휴대폰 접속 주소</a></p><p>장면 품질과 전송 화질은 별도입니다. 같은 핫스팟에서 이 탭을 화면에 열어두세요.</p>';
 const $=id=>document.getElementById(id);
 for(const [value,p] of Object.entries(streamProfiles)){const o=document.createElement('option');o.value=value;o.textContent=p.label;$('streamQuality').append(o);}
