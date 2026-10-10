@@ -1,0 +1,78 @@
+{
+  "statusBefore": {
+    "ready": false,
+    "state": "idle",
+    "device": null,
+    "gpu": null,
+    "model": "Qwen/Qwen3.5-2B",
+    "engine": "ClikaRT 0.6.4",
+    "configured": true,
+    "modelDownloaded": true,
+    "idleUnloadSeconds": 60,
+    "maxSeq": 2048,
+    "local": true,
+    "busy": false
+  },
+  "rendererBefore": {
+    "gpu": "ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "software": true,
+    "quality": "low",
+    "count": 24,
+    "width": 865,
+    "height": 1920,
+    "frames": 5,
+    "meanFps": 3.225390272222794,
+    "p95FrameMs": 1033.4000000000233,
+    "mbps": 0.08873651937297417,
+    "fps": 5.045058183217397,
+    "encodeMs": 8.399999999999963,
+    "reason": "none",
+    "encoder": "미제공",
+    "receivedAt": 1791649020.8399298
+  },
+  "reply": {
+    "state": "done",
+    "result": {
+      "settings": {
+        "count": 30,
+        "top": true
+      },
+      "explanation": "설정 제안입니다. 아래 값을 확인한 뒤 적용하세요.",
+      "model": "Qwen/Qwen3.5-2B",
+      "engine": "ClikaRT",
+      "device": "vulkan:0",
+      "gpu": "NVIDIA GeForce RTX 2080 Ti",
+      "elapsedMs": 578
+    }
+  },
+  "rendererAfterInference": {
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 2080 Ti (0x00001E04) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "software": false,
+    "meanFps": 0,
+    "frames": 0,
+    "receivedAt": 1791649031.7957358
+  },
+  "statusAfterIdle": {
+    "ready": false,
+    "state": "idle",
+    "device": "vulkan:0",
+    "gpu": "NVIDIA GeForce RTX 2080 Ti",
+    "error": null,
+    "loadMs": 7972,
+    "model": "Qwen/Qwen3.5-2B",
+    "engine": "ClikaRT 0.6.4",
+    "configured": true,
+    "modelDownloaded": true,
+    "idleUnloadSeconds": 60,
+    "maxSeq": 2048,
+    "local": true,
+    "busy": false
+  },
+  "rendererAfterIdle": {
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 2080 Ti (0x00001E04) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "software": false,
+    "meanFps": 0,
+    "frames": 0,
+    "receivedAt": 1791649091.7921467
+  }
+}

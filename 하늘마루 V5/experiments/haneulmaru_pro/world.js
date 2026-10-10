@@ -6,9 +6,11 @@ export function buildWorld(quality='balanced'){
  const profile=profiles[quality],root=new T.Group(),rand=seeded(871),dummy=new T.Object3D();
  const standard=(color,more={})=>new T.MeshStandardMaterial({color,roughness:.88,...more});
  const g=new T.PlaneGeometry(SIZE,SIZE,profile.segments,profile.segments);g.rotateX(-Math.PI/2);
- const a=g.attributes.position,colors=[];
- for(let i=0;i<a.count;i++){const x=a.getX(i),z=a.getZ(i),h=height(x,z);a.setY(i,h);const slope=Math.hypot(height(x+2,z)-h,height(x,z+2)-h)/2;const c=new T.Color(h<2?0x76846c:slope>1.2?0x77756f:h>130?0xa8a7a0:h>82?0x707c60:0x557551);c.multiplyScalar(.87+rand()*.22);colors.push(c.r,c.g,c.b);}
- g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.computeVertexNormals();
+ const a=g.attributes.position,colors=new Float32Array(a.count*3),color=new T.Color();
+ for(let i=0;i<a.count;i++)a.setY(i,height(a.getX(i),a.getZ(i)));
+ g.computeVertexNormals();const normals=g.attributes.normal;
+ for(let i=0;i<a.count;i++){const h=a.getY(i),slope=Math.hypot(normals.getX(i),normals.getZ(i))/Math.max(Math.abs(normals.getY(i)),1e-6);color.set(h<2?0x76846c:slope>1.2?0x77756f:h>130?0xa8a7a0:h>82?0x707c60:0x557551);color.multiplyScalar(.87+rand()*.22);const o=i*3;colors[o]=color.r;colors[o+1]=color.g;colors[o+2]=color.b;}
+ g.setAttribute('color',new T.BufferAttribute(colors,3));
  const ground=new T.Mesh(g,standard(0xffffff,{vertexColors:true}));ground.receiveShadow=true;root.add(ground);
  // Fine procedural surface relief in the fragment shader; no external textures/download dependency.
  ground.material.onBeforeCompile=shader=>{shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vTerrain;').replace('#include <begin_vertex>','#include <begin_vertex>\nvTerrain=position;');shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vTerrain;').replace('#include <color_fragment>','#include <color_fragment>\nfloat grain=sin(vTerrain.x*1.7)*sin(vTerrain.z*1.9)*0.035+sin(vTerrain.x*.39+vTerrain.z*.72)*0.025;diffuseColor.rgb*=1.0+grain;');};
@@ -28,9 +30,8 @@ export function buildWorld(quality='balanced'){
  for(let c=0;c<4;c++){
   const parts=[];for(const [geo,offset,angle]of [[new T.SphereGeometry(1.3,8,6),[0,0,0],0],[new T.BoxGeometry(9,.5,.6),[0,0,0],Math.PI/4],[new T.BoxGeometry(9,.5,.6),[0,0,0],-Math.PI/4],...[[-3,-3],[-3,3],[3,-3],[3,3]].map(([x,z])=>[new T.TorusGeometry(1.3,.18,4,10),[x,.1,z],0])]){const m=new T.InstancedMesh(geo,mats[c],232);m.count=0;m.frustumCulled=false;drones.add(m);parts.push({mesh:m,offset,angle,rotor:geo.type==='TorusGeometry'});}batches.push(parts);
  }
- const temp=new T.Object3D();let count=24;const positions=[];
- const pathG=new T.BufferGeometry(),pathArray=new Float32Array(64*3);pathG.setAttribute('position',new T.BufferAttribute(pathArray,3));const trail=new T.Line(pathG,new T.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.65}));root.add(trail);
- function update(t,agents=[],hiddenId=null){waterMat.uniforms.time.value=t;positions.length=0;const counters=[0,0,0,0];for(const p of agents){positions.push(p);if(p.id===hiddenId)continue;const c=({blue:0,red:1,green:2,unknown:3})[p.color]??3,index=counters[c]++;if(index>=232)continue;for(const part of batches[c]){const heading=p.heading||0,ox=part.offset[0],oz=part.offset[2];temp.position.set(p.x+ox*Math.cos(heading)+oz*Math.sin(heading),p.y+part.offset[1],p.z-ox*Math.sin(heading)+oz*Math.cos(heading));temp.rotation.set(part.rotor?Math.PI/2:0,part.angle+heading,0);temp.scale.setScalar(p.id.startsWith('NEW-')?2:1.5);temp.updateMatrix();part.mesh.setMatrixAt(index,temp.matrix);}}for(let c=0;c<4;c++)for(const part of batches[c]){part.mesh.count=Math.min(counters[c],232);part.mesh.instanceMatrix.needsUpdate=true;}trail.visible=false;}
+ const temp=new T.Object3D(),counters=[0,0,0,0],colorIndex={blue:0,red:1,green:2,unknown:3};const positions=[];
+ function update(t,agents=[],hiddenId=null){waterMat.uniforms.time.value=t;positions.length=0;counters.fill(0);for(const p of agents){positions.push(p);if(p.id===hiddenId)continue;const c=colorIndex[p.color]??3,index=counters[c]++;if(index>=232)continue;for(const part of batches[c]){const heading=p.heading||0,ox=part.offset[0],oz=part.offset[2];temp.position.set(p.x+ox*Math.cos(heading)+oz*Math.sin(heading),p.y+part.offset[1],p.z-ox*Math.sin(heading)+oz*Math.cos(heading));temp.rotation.set(part.rotor?Math.PI/2:0,part.angle+heading,0);temp.scale.setScalar(p.id.startsWith('NEW-')?2:1.5);temp.updateMatrix();part.mesh.setMatrixAt(index,temp.matrix);}}for(let c=0;c<4;c++)for(const part of batches[c]){part.mesh.count=Math.min(counters[c],232);part.mesh.instanceMatrix.needsUpdate=true;}}
  function dispose(){const geos=new Set(),materials=new Set();root.traverse(o=>{if(o.geometry)geos.add(o.geometry);if(o.material)materials.add(o.material);});geos.forEach(g=>g.dispose());materials.forEach(m=>{m.map?.dispose();m.dispose();});}
  update(0);return {root,update,positions,dispose,profile,ground};
 }

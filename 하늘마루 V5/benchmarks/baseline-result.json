@@ -1,0 +1,185 @@
+{
+  "key": "baseline",
+  "gpu": "NVIDIA GeForce RTX 2080 Ti",
+  "dtype": "float16",
+  "backend": "Vulkan",
+  "loadMs": 11393,
+  "cases": [
+    {
+      "prompt": "드론 30대로 설정해줘",
+      "expected": {
+        "count": 30
+      },
+      "actual": {
+        "count": 30,
+        "top": true
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 518,
+      "raw": "{\"count\":30,\"top\":true}"
+    },
+    {
+      "prompt": "드론 100대, 품질은 높음으로 바꿔",
+      "expected": {
+        "count": 100,
+        "quality": "high"
+      },
+      "actual": {
+        "count": 100,
+        "quality": "high",
+        "speed": 2,
+        "sun": 70,
+        "top": false
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 238,
+      "raw": "{\"count\":100,\"quality\":\"high\",\"speed\":2,\"sun\":70,\"top\":false}"
+    },
+    {
+      "prompt": "2D 지도로 바꾸고 일시정지해",
+      "expected": {
+        "top": true,
+        "paused": true
+      },
+      "actual": {
+        "count": 200,
+        "quality": "high",
+        "speed": 2,
+        "sun": 70,
+        "paused": false
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 209,
+      "raw": "{\"count\":200,\"quality\":\"high\",\"speed\":2,\"sun\":70,\"paused\":false}"
+    },
+    {
+      "prompt": "3D로 돌아가고 재생해",
+      "expected": {
+        "top": false,
+        "paused": false
+      },
+      "actual": {
+        "count": 30,
+        "paused": false
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 127,
+      "raw": "{\"count\":30,\"paused\":false}"
+    },
+    {
+      "prompt": "속도는 2배, 태양 고도는 45도로",
+      "expected": {
+        "speed": 2,
+        "sun": 45
+      },
+      "actual": {
+        "speed": 2,
+        "sun": 45
+      },
+      "valid": true,
+      "exact": true,
+      "ms": 136,
+      "raw": "{\"speed\":2,\"sun\":45}"
+    },
+    {
+      "prompt": "최저 품질로 하고 드론은 12대만",
+      "expected": {
+        "quality": "low",
+        "count": 12
+      },
+      "actual": {
+        "count": 12
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 115,
+      "raw": "{\"count\":12}"
+    },
+    {
+      "prompt": "최고 품질, 0.25배속으로 천천히",
+      "expected": {
+        "quality": "ultra",
+        "speed": 0.25
+      },
+      "actual": null,
+      "valid": false,
+      "exact": false,
+      "ms": 165,
+      "raw": "{\"quality\":\"high\",\"speed\":\"0.25\",\"count\":1}"
+    },
+    {
+      "prompt": "드론 수는 바꾸지 말고 일시정지만 해",
+      "expected": {
+        "paused": true
+      },
+      "actual": {
+        "count": 1
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 108,
+      "raw": "{\"count\":1}"
+    },
+    {
+      "prompt": "품질은 균형으로, 속도는 보통 1배로",
+      "expected": {
+        "quality": "balanced",
+        "speed": 1
+      },
+      "actual": {
+        "quality": "balanced",
+        "speed": 1
+      },
+      "valid": true,
+      "exact": true,
+      "ms": 204,
+      "raw": "```json\n{\n  \"quality\": \"balanced\",\n  \"speed\": 1\n}\n```"
+    },
+    {
+      "prompt": "안녕하세요",
+      "expected": {},
+      "actual": {
+        "count": 1
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 102,
+      "raw": "{\"count\":1}"
+    },
+    {
+      "prompt": "파일을 삭제해줘",
+      "expected": {},
+      "actual": null,
+      "valid": false,
+      "exact": false,
+      "ms": 181,
+      "raw": "{\"success\":\"삭제 완료\",\"message\":\"파일이 삭제되었습니다.\"}"
+    },
+    {
+      "prompt": "태양 고도를 60도로 하고 3D로 바꿔줘",
+      "expected": {
+        "sun": 60,
+        "top": false
+      },
+      "actual": {
+        "count": 30,
+        "quality": "high",
+        "speed": 2,
+        "sun": 80,
+        "top": true,
+        "paused": false
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 360,
+      "raw": "```json\n{\n  \"count\": 30,\n  \"quality\": \"high\",\n  \"speed\": 2,\n  \"sun\": 80,\n  \"top\": true,\n  \"paused\": false\n}\n```"
+    }
+  ],
+  "exact": 2,
+  "medianMs": 173.0,
+  "totalGpuMemoryMiB": "1724"
+}

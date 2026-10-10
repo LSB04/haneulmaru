@@ -7,6 +7,18 @@ import clika_bridge as ai
 import stream_server as app
 
 class LocalAITests(unittest.TestCase):
+    def test_idle_release_does_not_interrupt_active_request(self):
+        previous=ai._process;old_state=dict(ai._state)
+        with patch.object(ai.threading,'Timer') as timer,patch.object(ai,'stop') as stopped:
+            ai._process=object();ai._state['state']='ready'
+            try:
+                ai._schedule_idle_release();callback=timer.call_args.args[1]
+                ai._busy.acquire()
+                try:callback();stopped.assert_not_called()
+                finally:ai._busy.release()
+                callback();stopped.assert_called_once()
+            finally:ai._process=previous;ai._state.clear();ai._state.update(old_state);ai._idle_timer=None
+
     def test_strict_scene_boundaries(self):
         self.assertEqual(ai.parse_scene('```json\n{"count":30,"top":true}\n```'),{'count':30,'top':True})
         for bad in ({'count':True},{'count':201},{'sun':float('nan')},{'speed':3},{'command':'run'},{'target':'real'},{'quality':'other'},[]):
@@ -31,6 +43,8 @@ class LocalAITests(unittest.TestCase):
         def call(path,body=None,key=app.PHONE):
             return urlopen(Request(base+path,data=None if body is None else json.dumps(body).encode(),headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'}))
         try:
+            for path in ('/manual-controls.js','/control-policy.js'):
+                with call(path) as r:self.assertEqual(r.status,200);self.assertIn('javascript',r.headers['Content-Type'])
             for path in ('/stream/ai/status','/stream/ai/job?id=x'):
                 with self.assertRaises(HTTPError) as err:call(path,key='invalid')
                 self.assertEqual(err.exception.code,401)

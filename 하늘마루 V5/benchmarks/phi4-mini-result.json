@@ -1,0 +1,197 @@
+{
+  "key": "phi4-mini",
+  "gpu": "NVIDIA GeForce RTX 2080 Ti",
+  "dtype": "float16",
+  "backend": "Vulkan",
+  "loadMs": 40250,
+  "cases": [
+    {
+      "prompt": "드론 30대로 설정해줘",
+      "expected": {
+        "count": 30
+      },
+      "actual": {
+        "count": 30,
+        "top": true
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 574,
+      "raw": "{\"count\":30,\"top\":true}"
+    },
+    {
+      "prompt": "드론 100대, 품질은 높음으로 바꿔",
+      "expected": {
+        "count": 100,
+        "quality": "high"
+      },
+      "actual": {
+        "count": 100,
+        "quality": "high"
+      },
+      "valid": true,
+      "exact": true,
+      "ms": 416,
+      "raw": "{\"count\":100,\"quality\":\"high\"}"
+    },
+    {
+      "prompt": "2D 지도로 바꾸고 일시정지해",
+      "expected": {
+        "top": true,
+        "paused": true
+      },
+      "actual": {
+        "top": true,
+        "paused": true
+      },
+      "valid": true,
+      "exact": true,
+      "ms": 432,
+      "raw": "{\"top\":true, \"paused\":true}"
+    },
+    {
+      "prompt": "3D로 돌아가고 재생해",
+      "expected": {
+        "top": false,
+        "paused": false
+      },
+      "actual": {
+        "top": false,
+        "speed": 2
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 402,
+      "raw": "{\"top\":false,\"speed\":2}"
+    },
+    {
+      "prompt": "속도는 2배, 태양 고도는 45도로",
+      "expected": {
+        "speed": 2,
+        "sun": 45
+      },
+      "actual": {
+        "speed": 2,
+        "sun": 45,
+        "top": true
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 510,
+      "raw": "{\"speed\":2,\"sun\":45,\"top\":true}"
+    },
+    {
+      "prompt": "최저 품질로 하고 드론은 12대만",
+      "expected": {
+        "quality": "low",
+        "count": 12
+      },
+      "actual": {
+        "count": 12,
+        "quality": "low"
+      },
+      "valid": true,
+      "exact": true,
+      "ms": 405,
+      "raw": "{\"count\":12,\"quality\":\"low\"}"
+    },
+    {
+      "prompt": "최고 품질, 0.25배속으로 천천히",
+      "expected": {
+        "quality": "ultra",
+        "speed": 0.25
+      },
+      "actual": {
+        "quality": "high",
+        "speed": 0.25,
+        "sun": 80,
+        "top": false,
+        "paused": false
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 744,
+      "raw": "{\"quality\":\"high\",\"speed\":0.25,\"sun\":80,\"top\":false,\"paused\":false}"
+    },
+    {
+      "prompt": "드론 수는 바꾸지 말고 일시정지만 해",
+      "expected": {
+        "paused": true
+      },
+      "actual": {
+        "count": 50,
+        "top": true,
+        "speed": 1,
+        "sun": 50,
+        "paused": false
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 692,
+      "raw": "{\"count\":50,\"top\":true,\"speed\":1,\"sun\":50,\"paused\":false}"
+    },
+    {
+      "prompt": "품질은 균형으로, 속도는 보통 1배로",
+      "expected": {
+        "quality": "balanced",
+        "speed": 1
+      },
+      "actual": {
+        "quality": "balanced",
+        "speed": 1
+      },
+      "valid": true,
+      "exact": true,
+      "ms": 415,
+      "raw": "{\"quality\":\"balanced\",\"speed\":1}"
+    },
+    {
+      "prompt": "안녕하세요",
+      "expected": {},
+      "actual": {
+        "count": 50,
+        "quality": "high",
+        "speed": 1,
+        "sun": 50,
+        "top": true,
+        "paused": false
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 935,
+      "raw": "{\"count\":50, \"quality\":\"high\", \"speed\":1, \"sun\":50, \"top\":true, \"paused\":false}"
+    },
+    {
+      "prompt": "파일을 삭제해줘",
+      "expected": {},
+      "actual": {
+        "top": true
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 320,
+      "raw": "{\"top\":true}"
+    },
+    {
+      "prompt": "태양 고도를 60도로 하고 3D로 바꿔줘",
+      "expected": {
+        "sun": 60,
+        "top": false
+      },
+      "actual": {
+        "count": 200,
+        "quality": "high",
+        "speed": 1,
+        "sun": 60,
+        "top": false
+      },
+      "valid": true,
+      "exact": false,
+      "ms": 702,
+      "raw": "{\"count\":200,\"quality\":\"high\",\"speed\":1,\"sun\":60,\"top\":false}"
+    }
+  ],
+  "exact": 4,
+  "medianMs": 471.0,
+  "totalGpuMemoryMiB": "10106"
+}

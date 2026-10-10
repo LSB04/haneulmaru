@@ -1,3 +1,4 @@
+import {motionOnly} from './control-policy.js';
 import {validateScene} from './scene-settings.js';
 import * as T from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
@@ -98,8 +99,8 @@ export const streamBridge={
   if(Number.isFinite(d.aspect)&&d.aspect>=.2&&d.aspect<=5){remoteAspect=d.aspect;resize();}
   if(['flight','game'].includes(d.mission))setMode(d.mission);
   if(['chase','cockpit','overview','map'].includes(d.view))setView(d.view);
-  if(typeof d.selected==='string')sim.select(d.selected);
-  if(['auto','manual'].includes(d.pilot))sim.setPilot(d.pilot);
+  if(typeof d.selected==='string'){remoteMovement={};remoteUntil=0;sim.select(d.selected);}
+  if(['auto','manual'].includes(d.pilot)){remoteMovement={};remoteUntil=0;sim.setPilot(d.pilot);}
   if(typeof d.auto==='boolean')sim.auto=d.auto;
   if(typeof d.paused==='boolean'){sim.paused=d.paused;remoteMovement={};}
   if(Number.isInteger(d.count))sim.setCount(d.count);
@@ -111,7 +112,7 @@ export const streamBridge={
    else look(d.dx,d.dy);
   }
   if(!imuEnabled&&Number.isFinite(d.zoom)&&d.zoom>.2&&d.zoom<5){if(view==='chase')chaseDistance=T.MathUtils.clamp(chaseDistance*d.zoom,15,150);if(view==='overview'){camera.position.sub(controls.target).multiplyScalar(d.zoom).clampLength(12,1900).add(controls.target);controls.update();}}
-  sync();
+  if(!motionOnly(d))sync();
  },resetSession(){remoteSeq=-1;remoteMovement={};remoteUntil=0;}
 };
 setView('chase');sync();

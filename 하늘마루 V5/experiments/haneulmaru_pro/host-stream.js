@@ -1,3 +1,4 @@
+import {motionOnly} from './control-policy.js';
 import {streamBridge as bridge} from './app.js';
 import {installAI} from './clika-panel.js';
 import {signaling,peer,sendData,streamProfiles,configureSender,streamDelta} from './rtc.js';
@@ -20,7 +21,7 @@ async function makeOffer(client){pc?.close();media?.getTracks().forEach(t=>t.sto
  bridge.setStreamEdge(streamProfiles[streamKey].edge);media=bridge.canvas.captureStream(30);const track=media.getVideoTracks()[0];track.contentHint='detail';sender=pc.addTrack(track,media);
  pc.onicecandidate=e=>{if(e.candidate)signal.send({type:'ice',session:thisId,candidate:e.candidate.toJSON()}).catch(e=>status(e.message));};
  await pc.setLocalDescription(await pc.createOffer());if(pc===thisPeer)await signal.send({type:'offer',session:id,sdp:pc.localDescription});}
-function receive(d){if(d.type==='control'){bridge.control(d);sendData(pc,{type:'state',...bridge.state(),streamKey,transport,hostHidden:document.hidden});if(Object.hasOwn(streamProfiles,d.streamKey)&&streamKey!==d.streamKey){streamKey=d.streamKey;configure();}}if(d.type==='ping')sendData(pc,{type:'pong',at:d.at});}
+function receive(d){if(d.type==='control'){bridge.control(d);if(!motionOnly(d))sendData(pc,{type:'state',...bridge.state(),streamKey,transport,hostHidden:document.hidden});if(Object.hasOwn(streamProfiles,d.streamKey)&&streamKey!==d.streamKey){streamKey=d.streamKey;configure();}}if(d.type==='ping')sendData(pc,{type:'pong',at:d.at});}
 signal.poll(async m=>{if(m.type==='ready'){await makeOffer(m.session);return;}if(m.session!==id||!pc)return;if(m.type==='answer'){await pc.setRemoteDescription(m.sdp);for(const c of pending)await pc.addIceCandidate(c);pending=[];await configure();}if(m.type==='ice'){if(pc.remoteDescription)await pc.addIceCandidate(m.candidate);else pending.push(m.candidate);}});
 setInterval(()=>sendData(pc,{type:'state',...bridge.state(),streamKey,transport,hostHidden:document.hidden}),500);
 let collecting=false;

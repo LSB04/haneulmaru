@@ -1,13 +1,16 @@
 """Text-only local scene assistant. No cloud inference, credentials in PC files only."""
 import json, math, os, queue, secrets, subprocess, sys, threading, time
 from pathlib import Path
+from scene_prompt import SCENE_SYSTEM
 ROOT = Path(__file__).resolve().parents[2]
-MODEL = 'Qwen/Qwen2.5-0.5B-Instruct'
+CONFIG = json.loads((ROOT/'model-selection.json').read_text(encoding='utf-8'))
+MODEL = CONFIG['model']
 _busy = threading.Lock()
 _lock = threading.RLock()
 _process = None
 _messages = None
 _jobs = {}
+_idle_timer = None
 _state = {'ready':False, 'state':'idle', 'device':None, 'gpu':None}
 
 def validate_scene(value):
@@ -39,7 +42,8 @@ def status():
     license_path = os.environ.get('CLIKA_RT_LICENSE') or str(Path.home()/'Downloads/Default_Project_license.txt')
     with _lock:
         return {**_state, 'model':MODEL, 'engine':'ClikaRT 0.6.4', 'configured':Path(license_path).is_file(),
-                'modelDownloaded':(ROOT/'models/qwen2.5-0.5b-instruct/model.safetensors').is_file(),
+                'modelDownloaded':all((ROOT/CONFIG['local_path']/f['name']).is_file() for f in CONFIG['files']),
+                'idleUnloadSeconds':60,'maxSeq':CONFIG.get('max_seq',2048),
                 'local':True, 'busy':_busy.locked()}
 
 def _reader(process, messages):
@@ -51,14 +55,29 @@ def _reader(process, messages):
     finally: messages.put({'error':'WORKER_EXITED'})
 
 def stop():
-    global _process
+    global _process,_idle_timer
     with _lock:
+        if _idle_timer:_idle_timer.cancel();_idle_timer=None
         p=_process; _process=None
         _state.update(ready=False,state='idle')
         if p and p.poll() is None:
             p.terminate()
             try:p.wait(timeout=5)
             except subprocess.TimeoutExpired:p.kill();p.wait()
+
+def _schedule_idle_release():
+    global _idle_timer
+    with _lock:
+        if _idle_timer:_idle_timer.cancel()
+        process=_process
+        if process is None:return
+        def release():
+            if not _busy.acquire(blocking=False):return
+            try:
+                with _lock:
+                    if _process is process and _state['state']=='ready':stop()
+            finally:_busy.release()
+        _idle_timer=threading.Timer(60,release);_idle_timer.daemon=True;_idle_timer.start()
 
 def _receive(timeout):
     try: result=_messages.get(timeout=timeout)
@@ -125,7 +144,7 @@ def request(data):
     def run():
         try:
             if data['kind']=='scene':
-                system='You configure a synthetic 3D graphics demo. Output ONLY a flat JSON object, no markdown, no explanation. Supported keys: count (integer 1..200); quality ("low", "balanced", "high", "ultra"); speed (0.25, 1, 2); sun (10..80); top (true for 2D, false for 3D); paused (boolean). Include only requested settings. Unsupported requests: {}. No code or external data. Example user: 드론 30대. Answer: {"count":30}. Example user: 2D로 변경. Answer: {"top":true}.'
+                system=SCENE_SYSTEM
                 reply=converse(system,data['prompt'],96)
                 settings=parse_scene(reply['text'])
                 result={'settings':settings,'explanation':'설정 제안입니다. 아래 값을 확인한 뒤 적용하세요.' if settings else '지원되는 장면 설정이 없습니다.'}
@@ -140,7 +159,7 @@ def request(data):
         except Exception:
             stop()
             with _lock:_jobs[job]={'state':'error','error':'로컬 모델 실행 실패. SDK와 모델 설치를 확인하세요.'}
-        finally:_busy.release()
+        finally:_busy.release();_schedule_idle_release()
     threading.Thread(target=run,daemon=True).start()
     return {'job':job}
 

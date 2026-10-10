@@ -6,6 +6,7 @@ import json,mimetypes,threading,subprocess,re,sys,webbrowser
 ROOT=Path(__file__).resolve().parent
 PUBLIC_URL=''
 FILES=['scene-settings.js','airfield.js','index.html','style.css','app.js','imu-input.js','imu-direction.js','world.js','terrain.js','scenario.js','hud.js','game-info.json','icon-192.png','icon-512.png','vendor/three.module.min.js','vendor/three.core.min.js','vendor/OrbitControls.js','vendor/LICENSE.txt']
+FILES += ['manual-controls.js','control-policy.js']
 ASSETS={'/'+n:ROOT/n for n in FILES}
 ASSETS['/']=ROOT/'index.html'
 class Handler(BaseHTTPRequestHandler):

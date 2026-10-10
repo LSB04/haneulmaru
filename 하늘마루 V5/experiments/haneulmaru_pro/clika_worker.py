@@ -23,7 +23,8 @@ def main():
         start = time.perf_counter()
         # ClikaRT's Windows native loader needs an ASCII relative model path.
         os.chdir(ROOT)
-        model = AutoModelForCausalLM.from_pretrained('models/qwen2.5-0.5b-instruct', device=device, dtype='float16')
+        config=json.loads((ROOT/'model-selection.json').read_text(encoding='utf-8'))
+        model = AutoModelForCausalLM.from_pretrained(config['local_path'], device=device, dtype='float16', max_seq=config.get('max_seq',2048))
         emit({'ready':True, 'device':device, 'gpu':chosen[1], 'loadMs':round((time.perf_counter()-start)*1000)})
         for line in sys.stdin:
             try:

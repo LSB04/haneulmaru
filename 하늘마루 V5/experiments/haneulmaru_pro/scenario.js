@@ -1,4 +1,5 @@
 import {position,height,seeded} from './terrain.js';
+const sampleNow={},sampleNext={};
 
 export const COLORS={blue:0x379aff,red:0xff526b,green:0x54e8a1,unknown:0xf5f8ff};
 export const LABELS={blue:'A · 합류',red:'B · 게임 제거',green:'C · 경고 후 퇴장',unknown:'흰색 · 미확인'};
@@ -51,7 +52,7 @@ export class Scenario {
     }
   }
   agent(index,id,color,extra={}){
-    const p=position(index,this.time),next=position(index,this.time+.12);
+    const p=position(index,this.time,sampleNow),next=position(index,this.time+.12,sampleNext);
     return {id,index,color,...p,heading:Math.atan2(-(next.x-p.x),-(next.z-p.z)),...extra};
   }
   agents(){
