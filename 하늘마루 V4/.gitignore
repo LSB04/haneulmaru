@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+output/
+training/runs/
+experiments/haneulmaru_pro/photos/
+.env
+.aws/
+*.log
+*.pyc
+.env.*
+*.pem
+*.key
+tools/cloudflared/cloudflared.exe
+*.download
