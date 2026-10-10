@@ -1,3 +1,5 @@
+[NU40 연동 추가] 현재 연결은 NU40_연동_사용법.txt 및 experiments/haneulmaru_pro/VALIDATION.txt를 확인하세요.
+
 구조
 PC Three.js/WebGL → canvas.captureStream → WebRTC 비디오 → 휴대폰.
 휴대폰 터치/방향/설정 → RTCDataChannel → PC 카메라 및 합성 장면.
